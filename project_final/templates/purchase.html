@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- jQuery 및 jQuery UI 로드 -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
+    <title>바푸리푸드</title>
+    <style>
+        /* 입력 양식 스타일링 */
+        form {
+            margin: 20px 0;
+        }
+
+        label, input[type="submit"] {
+            margin-right: 10px;
+        }
+
+        /* 결과 테이블 스타일링 */
+        table {
+            border-collapse: collapse;
+            margin : auto;
+            
+        }
+
+        h3 {
+            text-align: center;
+        }
+
+        th, td {
+            width: 150px; height: 100%; 
+            border: 1px solid rgb(0, 0, 0);
+            word-break:break-all;
+            table-layout:fixed;
+            text-align: center;
+        }
+
+        th {
+            background-color: #afafaf;
+        }
+
+        /* 결과 없음 메시지 스타일링 */
+        .no-results {
+            color: red;
+            font-weight: bold;
+        }
+
+        .remove-button {
+        background-color: #ffffff; /* 배경 색상 설정 */
+        color: #ff0000; /* 텍스트 색상 설정 */
+        border: none; /* 테두리 없음 */
+        padding: 5px 10px; /* 여백 설정 */
+        cursor: pointer; /* 커서 모양 설정 */
+        }
+        
+        
+    </style>
+
+<script>
+ 
+    $(document).ready(function() {
+        // 자동 완성 기능 설정
+        $("#menu").autocomplete({
+            source: function(request, response) {
+                $.ajax({
+                    url: "/get_menu_list",
+                    data: {
+                        term: request.term
+                    },
+                    success: function(data) {
+                        response(data);
+                    }
+                });
+            },
+            minLength: 1 // 최소 입력 길이
+        });
+    
+        // 확인 버튼 클릭 이벤트 핸들러
+        $("#confirm-button").click(function() {
+        var cartItems = [];
+        $("#cart-list li").each(function() {
+            cartItems.push($(this).text().trim());
+        });
+
+        var menuItems = cartItems.map(function(item) {
+            return item.split(' ')[0];
+        });
+
+        var person = cartItems.map(function(item) {
+            var match = item.match(/\d+/); // 정규식으로 숫자 추출
+            return match ? match[0] : null; // 추출한 숫자 반환
+        });
+
+   
+        if (cartItems.length > 0) {
+        $.ajax({
+            type: "POST",
+            url: "/get_recipe_info",
+            data: {
+                menuItems: menuItems,
+                person: person
+            },
+            success: function(response) {
+                if (response.rcp_info) {
+                    var confirmationText = "<h3>선택한 메뉴의 레시피 및 양</h3>";
+                    confirmationText += "<table>";
+                    confirmationText += "<tr><th>재료</th><th>1인분</th><th>주문량</th></tr>";
+                    var uniqueMenus = [];
+
+                    for (var i = 0; i < response.rcp_info.length; i++) {
+                        var menu = response.rcp_info[i].menu;
+                        var rcp = response.rcp_info[i].rcp.split(',');
+                        var amountArray = response.rcp_info[i].amount.split(',');
+                        var multipliedAmounts = amountArray.map(function(amount) {
+                            return parseFloat(amount) * person[i];
+                        });
+                        
+                        for (var j = 0; j < amountArray.length; j++) {
+                            var menuIndex = uniqueMenus.indexOf(rcp[j]);
+                            if (menuIndex === -1) {
+                                uniqueMenus.push(rcp[j]);
+                                confirmationText += "<tr><td style='text-align: center;'>" + rcp[j] + "</td><td style='text-align: center;'>"+amountArray[j]+"</td><td style='text-align: center;'>" + multipliedAmounts[j] + "</td></tr>";
+                            } else {
+                                multipliedAmounts[menuIndex] += multipliedAmounts[j];
+                            }
+                        }
+                    }
+
+                    confirmationText += "</table>";
+
+                    $("#confirmation").html(confirmationText);
+                }
+            }
+        });
+    }
+
+       });
+    });
+   
+   // 추가기능설정
+   function addToCart(menuText) {
+       $.ajax({
+           type: "POST",
+           url: "/add_to_cart",
+           data: {
+               menuText: menuText
+           },
+           success: function(response) {
+               if (response.message === "추가되었습니다.") {
+                   // 메뉴를 동적으로 생성합니다.
+                   var newCartItem = `<li>${menuText} <button class="remove-button" data-menu="${menuText}">x</button></li>`;
+                   $("#cart-list").append(newCartItem);
+   
+                   // 새로운 버튼에 삭제 버튼 클릭 이벤트 핸들러를 추가합니다.
+                   $(document).on('click', '.remove-button', function() {
+                       var menuText = $(this).data('menu');
+                       removeItemFromCart(menuText); // 별도의 삭제 함수 호출
+                   });
+               }
+           }
+       });
+   }
+   
+   
+   
+   
+   //삭제기능설정
+   $(document).on('click', '.remove-button', function() {
+       var menuText = $(this).data('menu');
+   
+       $.ajax({
+           type: 'POST',
+           url: '/remove_from_cart',
+           data: { menuText: menuText },
+           success: function(response) {
+               if (response.message === "삭제되었습니다.") {
+                   $('#cart-list li:contains("' + menuText + '")').remove();
+               }
+           }
+       });
+
+       
+
+   });
+   
+   
+    </script>
+
+
+</head>
+<body>
+    {% extends 'header.html' %}
+        {% block content %}
+    <!-- <h2>메뉴 조회</h2>  -->
+    <br><br>
+<form style="text-align: center;" method="POST" >
+    
+    <label for="multiplier">인원 수:</label>
+    <input type="number" id="multiplier" name="multiplier" min="1" value="1">
+    <label style="margin-left:25px;" size=15 for="menu">메뉴:</label>
+    <input type="text" id="menu" name="menu">
+<input style="margin-left:25px;" type="submit" value="조회">
+    
+</form>
+
+{% if result_text %}
+<br><br><br><h3 style="text-align: center;">결과</h3>
+<p style="text-align: center;">{{ result_text }}
+<button onclick="addToCart('{{ result_text }}')">추가</button></p>
+    <!-- ... 테이블 표시 ... -->
+</table>
+{% endif %}
+
+<h2 style="text-align: center;">추가한 메뉴</h2>
+<ul style="text-align: center;" id="cart-list">
+    {% for cart_item in session['cart'] %}
+    <li>
+        {{ cart_item }}
+        <button class="remove-button" data-menu="{{ cart_item }}">x</button>
+    </li>
+    {% endfor %}
+</ul>
+<form id="addToCartForm">
+    <input type="hidden" id="cartMenu" name="cartMenu">
+</form>
+<p style="text-align: center;"><button id="confirm-button">확인</button></p>
+<div id="confirmation"></div>
+
+
+    {% endblock %}
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="public, max-age=3600"> <!-- Cache the page for 1 hour -->
+    <title>바푸리푸드</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <style>
+        /* 스타일을 추가하여 버튼 크기를 크게 만듭니다. */
+        button {
+            padding: 20px 50px; /* 버튼의 내부 여백(padding)을 조절하여 크기를 조정합니다. */
+            font-size: 20px;   /* 폰트 크기를 조절합니다. */
+        }
+
+        /* 스타일을 추가하여 메뉴를 옆으로 나열합니다. */
+        .menu-container {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        /* 스타일을 추가하여 각 메뉴 아이템의 스타일을 조정합니다. */
+        .menu-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* 스타일을 추가하여 각 식사 메뉴 영역의 스타일을 조정합니다. */
+        .meal {
+            text-align: center;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body style="text-align: center;">
+    {% extends 'header.html' %}
+        {% block content %}
+
+    <br><br>
+    <form action="/menu" method="post">
+        <button type="submit">하루식단추천</button>
+    </form>
+    <br><br>
+    <h1>식단표</h1>
+    <div class="menu-container">
+        <div class="meal">
+            <h3 style="text-align: center;">조식 메뉴</h3>
+            <ul class="menu-list">
+                {% for item in breakfast_menu %}
+                    <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="meal">
+            <h3 style="text-align: center;">중식 메뉴</h3>
+            <ul class="menu-list">
+                {% for item in lunch_menu %}
+                    <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="meal">
+            <h3 style="text-align: center;">석식 메뉴</h3>
+            <ul class="menu-list">
+                {% for item in dinner_menu %}
+                    <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endblock %}
+</body>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+</html>

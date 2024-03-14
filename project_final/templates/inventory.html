@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>바푸리 푸드</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <style>
+            /* ... 기존 스타일 ... */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center; /* 가운데 정렬 */
+        }
+      
+        form {
+            text-align: center;
+        }
+        ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 0;
+        }
+        li {
+            width: 20%;
+            padding: 10px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        .no-results {
+            text-align: center;
+            font-size: 18px;
+            color: red;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    {% extends 'header.html' %}
+        {% block content %}
+    <br><br>
+    <form method="post">
+        <input type="text" id="ingredients" name="ingredients", placeholder="식재료입력">
+        <select name="filter_by">
+            <option value="">전체</option>
+            <option value="MN">MN</option>
+            <option value="DS">DS</option>
+            <option value="SL">SL</option>
+            <option value="SB">SB</option>
+            <option value="KC">KC</option>
+            <option value="SP">SP</option>
+            <option value="RC">RC</option>
+        </select>
+        <input type="submit" value="검색">
+    </form>
+    <br><br><br>
+    {% if matched_menus %}
+        
+        <table class="table table-striped table-hover">
+           
+            <tbody>
+                {% for index in range(0, matched_menus|length, 5) %}
+                <tr>
+                    {% for menu in matched_menus[index:index+5] %}
+                        <td>{{ menu }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="no-results">{{ no_results_message }}</p>
+
+    {% endif %}
+    <br>
+
+    {% endblock %}
+</body>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+</html>
